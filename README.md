@@ -12,7 +12,7 @@ R tree search engine is a C++ library that aims to provide an efficient and scal
 
 When we talked about map application, often time we'll have queries like “return all buildings in this area”, “find 1000 closest gas stations to this point”, and returning results within milliseconds even when searching millions of objects.
 
-The goal of R tree search engine is to provide a high performance search engine to solve these classical problems like "K nearest neighbors" and "range query".
+The goal of R tree search engine is to provide a high performance (The goal is to make the query time as low as possible) search engine to solve these classical problems like "K nearest neighbors" and "range query".
 
 ## Prospective Users
 
@@ -58,29 +58,29 @@ All new features developed will have corresponding unit tests.
 
 ### Week 3 (4/24)
 
-- Plan out the prototype interface, and also the UML graph. 
+- Produce test dataset for essential features.
+- Plan out the prototype interface.
 - Write c++ classes that state out the member functions and variables.
-
+ 
 ### Week 4 (5/1)
 
-- Produce test dataset for essential features.
 - Developing the essential features for the library.
 
 ### Week 5 (5/8)
 
-- Refactor.
+- Optimize the performance.
 
 ### Week 6 (5/15)
 
-- Optimize the performance.
+- Refactor.
 
 ### Week 7 (5/22)
 
-- Complete API documentation for the library.
+- Complete API documentation for the library, and API document also serve as the slide for presentation.
 
 ### Week 8 (5/29)
 
-- Prepare the slide for upcoming presentation
+- Complete the slide for upcoming presentation
 
 - Collect performance analysis data and plot the result. 
 
@@ -91,4 +91,3 @@ All new features developed will have corresponding unit tests.
 * [Vladmir Agafonkin (2017). A dive into spatial search algorithms](https://blog.mapbox.com/a-dive-into-spatial-search-algorithms-ebd0c5e39d2a)
 * [arwa A. M. Abd Elwahab, Khaled M. Mahar, Hatem Abdelkader (2013), Hatem Awad Khater. Combining R-Tree and B-Tree to Enhance Spatial Queries Processing](https://ieeexplore.ieee.org/document/9529800)
 
-Footer
