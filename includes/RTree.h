@@ -1,7 +1,7 @@
 #ifndef RTREE_H
 #define RTREE_H
 
-#include<vector>
+#include <vector>
 #include "Node.h"
 
 class RTree {
@@ -17,13 +17,14 @@ private:
     int max_children;
     Node* root;
 
-    void insert(Node* node, const Point& point);
+    void insert(const Point& point);
     Node* choose_leaf(Node* node, const Point& point);
     Node* split_node(Node* node);
     void adjust_tree(Node* node, Node* split_node);
     Node* find_parent(Node* current, Node* child);
-    void k_nearest_neighbors_recursive(Node* node, const Point& point, int k, std::vector<Point>& result, double& max_distance);
-    void range_query_recursive(Node* node, const Point& point, std::vector<Point>& result);
+    void k_nearest_neighbors_recursive(Node* node, const Geometry::Point& point, int k, std::vector<Geometry::Point>& result, double& max_distance);
+    void range_query_recursive(Node* node, const Geometry::Point& point, std::vector<Geometry::Point>& result);
+    bool remove_point_recursive(Node* node, const Geometry::Point& point)
 };
 
 #endif
