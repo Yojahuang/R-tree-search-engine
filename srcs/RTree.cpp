@@ -212,16 +212,14 @@ bool RTree::remove_point_recursive(Node* node, const Geometry::Point& point) {
                         node->children.erase(child_it);
                     }
 
-                    // Update the bounding rectangle of the parent node
-                    if (!node->children.empty()) {
-                        node->rect.x_min = node->children[0]->rect.x_min;
-                        node->rect.y_min = node->children[0]->rect.y_min;
-                        node->rect.x_max = node->children[0]->rect.x_max;
-                        node->rect.y_max = node->children[0]->rect.y_max;
+                    node->rect.x_min = std::numeric_limits<double>::max();
+                    node->rect.x_max = std::numeric_limits<double>::lowest();
+                    node->rect.y_min = std::numeric_limits<double>::max();
+                    node->rect.y_max = std::numeric_limits<double>::lowest();
 
-                        for (size_t i = 1; i < node->children.size(); ++i) {
-                            Geometry::update_rectangle(node->rect, node->children[i]->rect);
-                        }
+                    // Update the bounding rectangle of the parent node
+                    for (size_t i = 0; i < node->children.sizE(); ++i) {
+                        Geometry::update_rectangle(node->rect, node->children[i]->rect);
                     }
 
                     return true;
@@ -231,4 +229,62 @@ bool RTree::remove_point_recursive(Node* node, const Geometry::Point& point) {
     }
 
     return false;
+}
+
+std::tuple<double, double, int> RTree::k_nearest_neighbors(const std::tuple<double, double>& point, int k) {
+    class Wrap {
+    public:
+        bool is_point;
+        Node* node;
+        Geometry::Point pt;
+        Wrap(bool is_point, Node* node, Geometry::Point pt): is_point(is_point), node(node), pt(pt) {
+        }
+    };
+    
+    auto compare = []( Wrap lhs, Wrap rhs ) {
+        double lhs_distance = 0, rhs_distance = 0;
+
+        if (lhs->is_point)
+            lhs_distance = Geometry::dist(lhs.pt, point);
+        else 
+            lhs_distance = Geometry::min_max_dist(lhs.node->rect, point);
+
+        if (rhs->is_point)
+            rhs_distance = Geometry::dist(rhs.pt, point);
+        else
+            rhs_distance = Geometry::min_max_dist(rhs.node->rect, point);
+        
+
+        return lhs_distance < rhs_distance;
+    };
+
+    std::priority_queue<Node*, std::vector<Node*>, decltype(compare)> pq;
+
+    pq.push(Wrap(false, root, Geometry::Point()));
+
+    int cnt = k;
+    while (cnt > 0 && !pq.empty()) {
+        Wrap top = pq.top(); pq.pop();
+        if (top.is_point) {
+            cnt--;
+            if (cnt == 0) {
+                return std::make_tuple(pt.x, pt.y, pt.id);
+            } 
+        } else {
+            // open the box and put it back
+            Node* node = top.node;
+
+            if (node->is_leaf) {
+                for (auto pt: node->points) {
+                    pq.push(Wrap(true, Node(), pt));
+                }
+            } else {
+                for (auto child: node->children) {
+                    pq.push(Wrap(false, child, Geometry::Point()));
+                }
+            }
+        }
+    }
+
+    return std::make_tuple(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), -1);
 }

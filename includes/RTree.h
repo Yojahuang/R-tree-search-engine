@@ -22,7 +22,6 @@ private:
     Node* split_node(Node* node);
     void adjust_tree(Node* node, Node* split_node);
     Node* find_parent(Node* current, Node* child);
-    void k_nearest_neighbors_recursive(Node* node, const Geometry::Point& point, int k, std::vector<Geometry::Point>& result, double& max_distance);
     void range_query_recursive(Node* node, const Geometry::Point& point, std::vector<Geometry::Point>& result);
     bool remove_point_recursive(Node* node, const Geometry::Point& point)
 };
