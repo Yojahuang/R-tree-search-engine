@@ -12,7 +12,7 @@ public:
     std::tuple<double, double, int> k_nearest_neighbors(std::tuple<double, double>, int);
     void remove_point(std::tuple<double, double, int>);
     void clear();
-    std::vector<std::tuple<double, double, int>> range_query(std::tuple<double,double>);
+    std::vector<std::tuple<double, double, int>> range_query(std::tuple<double,double>, double);
 private:
     int max_children;
     Node* root;

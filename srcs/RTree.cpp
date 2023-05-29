@@ -17,6 +17,39 @@ void RTree::add_point(std::tuple<double,double,int> val) {
     insert(point);
 }
 
+std::vector<std::tuple<double, double, int>> range_query(std::tuple<double, double> point, double distance) {
+    Geometry::Point search_point;
+    search_point.x = std::get<0>(point);
+    search_point.y = std::get<1>(point);
+
+    std::vector<Geometry::Point> points;
+    std::vector<std::tuple<double, double, int>> result;
+
+    range_query_recursive(root, search_point, distance, points);
+
+    for (auto pt: points) {
+        result.push_back(std::make_tuple(pt.x, pt.y, pt.id));
+    }
+
+    return result;
+
+
+void RTree::range_query_recursive(Node* node, const Geometry::Point& search_point, double distance, std::vector<Geometry::Point>& result) {
+    if (node->is_leaf) {
+        for (const auto& leaf_point : node->points) {
+            if (Geometry::dist(leat_point, search_point) <= distance) {
+                result.push_back(leaf_point);
+            }
+        }
+    } else {
+        for (auto* child : node->children) {
+            if (Geometry::min_dist(child->rect, search_point) <= distance) {
+                range_query_recursive(child, search_point, distance, result);
+            }
+        }
+    }
+}}
+
 Node* RTree::choose_leaf(Node* node, const Geometry::Point& point) {
     if (node->is_leaf) {
         return node;
