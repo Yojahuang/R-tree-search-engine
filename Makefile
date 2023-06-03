@@ -2,9 +2,9 @@ CXX = g++
 CFLAGS = -std=c++14 -O3 -Wall -shared -fPIC `python3-config --includes` 
 CIMPORTPATH = "includes"
 
-all: rtree.so
+all: RTree.so
 
-rtree.so: includes/Utils.hpp includes/RTree.h includes/Node.h includes/Geometry.h srcs/Geometry.cpp srcs/RTree.cpp pybind.cpp  
+RTree.so: includes/Utils.hpp includes/RTree.h includes/Node.h includes/Geometry.h srcs/Geometry.cpp srcs/RTree.cpp pybind.cpp  
 	$(CXX) $^ $(CFLAGS) -I/usr/include/mk -I${CIMPORTPATH} -o $@
 
 clean:

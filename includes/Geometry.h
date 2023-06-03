@@ -23,7 +23,9 @@ namespace Geometry {
             y = _y;
             id = -1;
         }
-        Point();
+        Point() {
+
+        }
 
         bool operator==(const Point& rhs) const {
             return x == rhs.x && y == rhs.y && id == rhs.id;

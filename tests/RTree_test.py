@@ -29,7 +29,7 @@ def test_remove_point():
         rTree.remove_point((0.0, i, i))
 
     for i in range(100):
-        val1 = rTree.k_nearest_neighbors((0.0, 0.0), i)
+        val = rTree.k_nearest_neighbors((0.0, 0.0), i)
         
         expected_val = (0.0, i+100, i+100)
         for j in range(3):
