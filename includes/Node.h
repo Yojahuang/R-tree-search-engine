@@ -3,14 +3,20 @@
 
 #include <vector>
 #include <algorithm>
-#include "Geometry.hpp"
+#include "Geometry.h"
 
 class Node {
 public:
     Node(bool leaf = false) : is_leaf(leaf) {
         point_size = 0;
     }
-    ~Node();
+    ~Node() {
+        for (auto& item: children) {
+            delete item;
+        }
+        children.clear();
+        points.clear();
+    };
 
     bool is_leaf;
     int point_size;
@@ -25,13 +31,5 @@ public:
         }
     }
 };
-
-Node::~Node() {
-    for (auto& item: children) {
-        delete item;
-    }
-    children.clear();
-    points.clear();
-}
 
 #endif

@@ -3,12 +3,14 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <queue>
 #include "RTree.h"
 #include "Node.h"
+#include "Utils.hpp"
 
 RTree::RTree() : max_children(8), root(new Node(true)) {}
 
-void RTree::add_point(std::tuple<double,double,int> val) {
+void RTree::add_point(const std::tuple<double,double,int>& val) {
     Geometry::Point point;
     point.x = std::get<0>(val);
     point.y = std::get<1>(val);
@@ -17,7 +19,7 @@ void RTree::add_point(std::tuple<double,double,int> val) {
     insert(point);
 }
 
-std::vector<std::tuple<double, double, int>> range_query(std::tuple<double, double> point, double distance) {
+std::vector<std::tuple<double, double, int>> RTree::range_query(std::tuple<double, double> point, double distance) {
     Geometry::Point search_point;
     search_point.x = std::get<0>(point);
     search_point.y = std::get<1>(point);
@@ -32,12 +34,12 @@ std::vector<std::tuple<double, double, int>> range_query(std::tuple<double, doub
     }
 
     return result;
-
+}
 
 void RTree::range_query_recursive(Node* node, const Geometry::Point& search_point, double distance, std::vector<Geometry::Point>& result) {
     if (node->is_leaf) {
         for (const auto& leaf_point : node->points) {
-            if (Geometry::dist(leat_point, search_point) <= distance) {
+            if (Geometry::dist(leaf_point, search_point) <= distance) {
                 result.push_back(leaf_point);
             }
         }
@@ -48,7 +50,7 @@ void RTree::range_query_recursive(Node* node, const Geometry::Point& search_poin
             }
         }
     }
-}}
+}
 
 Node* RTree::choose_leaf(Node* node, const Geometry::Point& point) {
     if (node->is_leaf) {
@@ -58,7 +60,7 @@ Node* RTree::choose_leaf(Node* node, const Geometry::Point& point) {
     double min_enlargement = std::numeric_limits<double>::max();
     Node* selected_child = nullptr;
     for (auto* child : node->children) {
-        Rectangle enlarged_rect;
+        Geometry::Rectangle enlarged_rect;
         enlarged_rect.x_min = std::min(child->rect.x_min, point.x);
         enlarged_rect.y_min = std::min(child->rect.y_min, point.y);
         enlarged_rect.x_max = std::max(child->rect.x_max, point.x);
@@ -99,7 +101,7 @@ Node* RTree::split_node(Node* node) {
                 }
             }
 
-            Rectangle left_rect, right_rect;
+            Geometry::Rectangle left_rect, right_rect;
             for (auto item: left) Geometry::update_rectangle(left_rect, item);
             for (auto item: right) Geometry::update_rectangle(right_rect, item);
 
@@ -115,8 +117,8 @@ Node* RTree::split_node(Node* node) {
         Node* ori_node = new Node(node->is_leaf);
 
         for (size_t i = 0; i < node->points.size(); ++i) {
-            if (best_mask & (1 << i)) new_node.points.push_back(node->points[i]);
-            else ori_node.points.push_back(node->points[i]);
+            if (best_mask & (1 << i)) new_node->points.push_back(node->points[i]);
+            else ori_node->points.push_back(node->points[i]);
         }
 
         new_node->update_point_size();
@@ -140,9 +142,9 @@ Node* RTree::split_node(Node* node) {
                 }
             }
 
-            Rectangle left_rect, right_rect;
-            for (auto item: left) Geometry::update_rectangle(left_rect, item);
-            for (auto item: right) Geometry::update_rectangle(right_rect, item);
+            Geometry::Rectangle left_rect, right_rect;
+            for (auto item: left) Geometry::update_rectangle(left_rect, item->rect);
+            for (auto item: right) Geometry::update_rectangle(right_rect, item->rect);
 
             if (std::max(left.size(), right.size()) <= max_children &&
                 left_rect.area() + right_rect.area() < best_area
@@ -156,8 +158,8 @@ Node* RTree::split_node(Node* node) {
         Node* ori_node = new Node(node->is_leaf);
 
         for (size_t i = 0; i < node->children.size(); ++i) {
-            if (best_mask & (1 << i)) new_node.children.push_back(node->children[i]);
-            else ori_node.children.push_back(node->children[i]);
+            if (best_mask & (1 << i)) new_node->children.push_back(node->children[i]);
+            else ori_node->children.push_back(node->children[i]);
         }
 
         node = ori_node;
@@ -175,7 +177,7 @@ void RTree::adjust_tree(Node* ori_node, Node* new_node) {
         Geometry::update_rectangle(root->rect, new_node->rect);
         return;
     } else {
-        Node* parent = find_parent(ori_node);
+        Node* parent = find_parent(root, ori_node);
 
         parent->children.push_back(new_node);
 
@@ -186,7 +188,7 @@ void RTree::adjust_tree(Node* ori_node, Node* new_node) {
     }
 }
 
-void RTree::find_parent(Node* current, Node* child) {
+Node* RTree::find_parent(Node* current, Node* child) {
     if (std::find(current->children.begin(), current->children.end(), child) != current->children.end()) {
         return current;
     }
@@ -206,13 +208,13 @@ void RTree::clear() {
     root = new Node(true);
 }
 
-void RTree::insert(const Point& point) {
+void RTree::insert(const Geometry::Point& point) {
     Node* target = choose_leaf(root, point);
 
     update_rectangle(target->rect, point);
     target->update_point_size();
 
-    if (target->points > max_children) {
+    if (target->points.size() > max_children) {
         Node* split = split_node(target);
         adjust_tree(target, split);
     }
@@ -251,7 +253,7 @@ bool RTree::remove_point_recursive(Node* node, const Geometry::Point& point) {
                     node->rect.y_max = std::numeric_limits<double>::lowest();
 
                     // Update the bounding rectangle of the parent node
-                    for (size_t i = 0; i < node->children.sizE(); ++i) {
+                    for (size_t i = 0; i < node->children.size(); ++i) {
                         Geometry::update_rectangle(node->rect, node->children[i]->rect);
                     }
 
@@ -265,39 +267,16 @@ bool RTree::remove_point_recursive(Node* node, const Geometry::Point& point) {
 }
 
 std::tuple<double, double, int> RTree::k_nearest_neighbors(const std::tuple<double, double>& point, int k) {
-    class Wrap {
-    public:
-        bool is_point;
-        Node* node;
-        Geometry::Point pt;
-        Wrap(bool is_point, Node* node, Geometry::Point pt): is_point(is_point), node(node), pt(pt) {
-        }
-    };
-    
-    auto compare = []( Wrap lhs, Wrap rhs ) {
-        double lhs_distance = 0, rhs_distance = 0;
+    Geometry::Point special_pt(std::get<0>(point), std::get<1>(point));
 
-        if (lhs->is_point)
-            lhs_distance = Geometry::dist(lhs.pt, point);
-        else 
-            lhs_distance = Geometry::min_max_dist(lhs.node->rect, point);
+    std::priority_queue<Utils::Wrap, std::vector<Utils::Wrap>, Utils::CMP> pq;
 
-        if (rhs->is_point)
-            rhs_distance = Geometry::dist(rhs.pt, point);
-        else
-            rhs_distance = Geometry::min_max_dist(rhs.node->rect, point);
-        
-
-        return lhs_distance < rhs_distance;
-    };
-
-    std::priority_queue<Node*, std::vector<Node*>, decltype(compare)> pq;
-
-    pq.push(Wrap(false, root, Geometry::Point()));
+    pq.push(Utils::Wrap(false, root, Geometry::Point(), special_pt));
 
     int cnt = k;
     while (cnt > 0 && !pq.empty()) {
-        Wrap top = pq.top(); pq.pop();
+        Utils::Wrap top = pq.top(); pq.pop();
+        Geometry::Point pt = top.pt;
         if (top.is_point) {
             cnt--;
             if (cnt == 0) {
@@ -309,11 +288,13 @@ std::tuple<double, double, int> RTree::k_nearest_neighbors(const std::tuple<doub
 
             if (node->is_leaf) {
                 for (auto pt: node->points) {
-                    pq.push(Wrap(true, Node(), pt));
+                    Utils::Wrap content(true, new Node(), pt, special_pt);
+                    pq.push(content);
                 }
             } else {
                 for (auto child: node->children) {
-                    pq.push(Wrap(false, child, Geometry::Point()));
+                    Utils::Wrap content(false, child, Geometry::Point(), special_pt);
+                    pq.push(content);
                 }
             }
         }

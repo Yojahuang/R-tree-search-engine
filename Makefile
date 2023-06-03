@@ -4,7 +4,7 @@ CIMPORTPATH = "includes"
 
 all: rtree.so
 
-rtree.so: includes/RTree.h includes/Node.h includes/Geometry.hpp srcs/RTree.cpp pybind.cpp  
+rtree.so: includes/Utils.hpp includes/RTree.h includes/Node.h includes/Geometry.h srcs/Geometry.cpp srcs/RTree.cpp pybind.cpp  
 	$(CXX) $^ $(CFLAGS) -I/usr/include/mk -I${CIMPORTPATH} -o $@
 
 clean:
