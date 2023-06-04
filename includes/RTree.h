@@ -19,7 +19,6 @@ private:
     size_t max_children;
     Node *root;
 
-    void bfs();
     void insert(const Geometry::Point &point);
     Node *choose_leaf(Node *node, const Geometry::Point &point);
     Node *split_node(Node *node);

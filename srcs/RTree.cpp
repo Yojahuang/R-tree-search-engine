@@ -11,40 +11,6 @@
 
 RTree::RTree() : max_children(8), root(new Node(true)) {}
 
-void RTree::bfs()
-{
-    std::queue<std::pair<Node *, int>> qu;
-    qu.push(std::make_pair(root, 0));
-
-    while (!qu.empty())
-    {
-        std::pair<Node *, int> item = qu.front();
-        qu.pop();
-
-        std::cout << item.second;
-        if (item.first->is_leaf)
-        {
-            std::cout << std::endl;
-            std::cout << "Points: ";
-            for (auto pt : item.first->points)
-            {
-                std::cout << "(" << pt.x << ", " << pt.y << ", " << pt.id << ") ";
-            }
-        }
-        else
-        {
-            int level = item.second + 1;
-            for (auto child : item.first->children)
-            {
-                qu.push(std::make_pair(child, level));
-            }
-        }
-
-        std::cout << std::endl;
-    }
-    std::cout << "====================" << std::endl;
-}
-
 void RTree::add_point(const std::tuple<double, double, int> &val)
 {
     Geometry::Point point;
@@ -190,9 +156,9 @@ Node *RTree::split_node(Node *node)
 
         node->points.clear();
         node->rect.x_min = std::numeric_limits<double>::max();
-        node->rect.x_max = std::numeric_limits<double>::min();
+        node->rect.x_max = std::numeric_limits<double>::lowest();
         node->rect.y_min = std::numeric_limits<double>::max();
-        node->rect.y_max = std::numeric_limits<double>::min();
+        node->rect.y_max = std::numeric_limits<double>::lowest();
 
         for (auto pt : points)
         {
@@ -202,7 +168,6 @@ Node *RTree::split_node(Node *node)
 
         new_node->update_point_size();
         node->update_point_size();
-
         return new_node;
     }
     else
@@ -258,9 +223,9 @@ Node *RTree::split_node(Node *node)
 
         node->children.clear();
         node->rect.x_min = std::numeric_limits<double>::max();
-        node->rect.x_max = std::numeric_limits<double>::min();
+        node->rect.x_max = std::numeric_limits<double>::lowest();
         node->rect.y_min = std::numeric_limits<double>::max();
-        node->rect.y_max = std::numeric_limits<double>::min();
+        node->rect.y_max = std::numeric_limits<double>::lowest();
 
         for (auto child : childs)
         {
@@ -289,6 +254,7 @@ void RTree::adjust_tree(Node *ori_node, Node *new_node)
     {
         Node *parent = find_parent(root, ori_node);
 
+        Geometry::update_rectangle(parent->rect, new_node->rect);
         parent->children.push_back(new_node);
 
         if (parent->children.size() > max_children)
@@ -307,7 +273,9 @@ Node *RTree::find_parent(Node *current, Node *child)
     }
 
     if (current->is_leaf || !Geometry::is_overlap(current->rect, child->rect))
+    {
         return nullptr;
+    }
 
     for (Node *item : current->children)
     {
@@ -327,6 +295,7 @@ void RTree::clear()
 
 void RTree::insert(const Geometry::Point &point)
 {
+    Geometry::update_rectangle(root->rect, point);
     Node *target = choose_leaf(root, point);
 
     update_rectangle(target->rect, point);

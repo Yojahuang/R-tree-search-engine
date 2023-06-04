@@ -3,9 +3,16 @@
 
 #include "Geometry.h"
 #include "Node.h"
+#include <iostream>
 
 namespace Utils
 {
+    void print_rect(const std::string &str, Geometry::Rectangle rect)
+    {
+        std::cout << str;
+        std::cout << rect.x_min << ' ' << rect.x_max << ' ' << rect.y_min << ' ' << rect.y_max << std::endl;
+    }
+
     class Wrap
     {
     public:
