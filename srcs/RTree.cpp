@@ -42,6 +42,7 @@ void RTree::bfs()
 
         std::cout << std::endl;
     }
+    std::cout << "====================" << std::endl;
 }
 
 void RTree::add_point(const std::tuple<double, double, int> &val)
@@ -53,8 +54,6 @@ void RTree::add_point(const std::tuple<double, double, int> &val)
 
     insert(point);
     root->update_point_size();
-
-    bfs();
 }
 
 std::vector<std::tuple<double, double, int>> RTree::range_query(std::tuple<double, double> point, double distance)
@@ -111,11 +110,8 @@ Node *RTree::choose_leaf(Node *node, const Geometry::Point &point)
     Node *selected_child = nullptr;
     for (auto *child : node->children)
     {
-        Geometry::Rectangle enlarged_rect;
-        enlarged_rect.x_min = std::min(child->rect.x_min, point.x);
-        enlarged_rect.y_min = std::min(child->rect.y_min, point.y);
-        enlarged_rect.x_max = std::max(child->rect.x_max, point.x);
-        enlarged_rect.y_max = std::max(child->rect.y_max, point.y);
+        Geometry::Rectangle enlarged_rect = child->rect;
+        Geometry::update_rectangle(enlarged_rect, point);
 
         double enlarge_rect_area = enlarged_rect.area();
         double current_rect_area = child->rect.area();
@@ -177,7 +173,7 @@ Node *RTree::split_node(Node *node)
         }
 
         Node *new_node = new Node(node->is_leaf);
-        Node *ori_node = new Node(node->is_leaf);
+        std::vector<Geometry::Point> points;
 
         for (size_t i = 0; i < node->points.size(); ++i)
         {
@@ -188,31 +184,24 @@ Node *RTree::split_node(Node *node)
             }
             else
             {
-                ori_node->points.push_back(node->points[i]);
-                Geometry::update_rectangle(ori_node->rect, node->points[i]);
+                points.push_back(node->points[i]);
             }
         }
 
-        new_node->update_point_size();
-        ori_node->update_point_size();
-
-        node->children.clear();
         node->points.clear();
-        node->rect = ori_node->rect;
-        node->is_leaf = ori_node->is_leaf;
-        node->point_size = ori_node->point_size;
+        node->rect.x_min = std::numeric_limits<double>::max();
+        node->rect.x_max = std::numeric_limits<double>::min();
+        node->rect.y_min = std::numeric_limits<double>::max();
+        node->rect.y_max = std::numeric_limits<double>::min();
 
-        node->update_point_size();
-
-        for (auto child : ori_node->children)
-        {
-            node->children.push_back(child);
-        }
-
-        for (auto pt : ori_node->points)
+        for (auto pt : points)
         {
             node->points.push_back(pt);
+            Geometry::update_rectangle(node->rect, pt);
         }
+
+        new_node->update_point_size();
+        node->update_point_size();
 
         return new_node;
     }
@@ -252,7 +241,7 @@ Node *RTree::split_node(Node *node)
         }
 
         Node *new_node = new Node(node->is_leaf);
-        Node *ori_node = new Node(node->is_leaf);
+        std::vector<Node *> childs;
 
         for (size_t i = 0; i < node->children.size(); ++i)
         {
@@ -263,28 +252,23 @@ Node *RTree::split_node(Node *node)
             }
             else
             {
-                ori_node->children.push_back(node->children[i]);
-                Geometry::update_rectangle(ori_node->rect, node->children[i]->rect);
+                childs.push_back(node->children[i]);
             }
         }
 
         node->children.clear();
-        node->points.clear();
-        node->rect = ori_node->rect;
-        node->is_leaf = ori_node->is_leaf;
-        node->point_size = ori_node->point_size;
+        node->rect.x_min = std::numeric_limits<double>::max();
+        node->rect.x_max = std::numeric_limits<double>::min();
+        node->rect.y_min = std::numeric_limits<double>::max();
+        node->rect.y_max = std::numeric_limits<double>::min();
 
-        node->update_point_size();
-
-        for (auto child : ori_node->children)
+        for (auto child : childs)
         {
             node->children.push_back(child);
+            Geometry::update_rectangle(node->rect, child->rect);
         }
 
-        for (auto pt : ori_node->points)
-        {
-            node->points.push_back(pt);
-        }
+        node->update_point_size();
 
         return new_node;
     }
@@ -294,7 +278,7 @@ void RTree::adjust_tree(Node *ori_node, Node *new_node)
 {
     if (ori_node == root)
     {
-        root = new Node();
+        root = new Node(false);
         root->children.push_back(ori_node);
         root->children.push_back(new_node);
         Geometry::update_rectangle(root->rect, ori_node->rect);
