@@ -6,13 +6,14 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(RTree, m) {
-  m.doc() = "R Tree search engine function implementation";      // module doc string
+PYBIND11_MODULE(RTree, m)
+{
+  m.doc() = "R Tree search engine function implementation"; // module doc string
   py::class_<RTree>(m, "RTree")
-    .def(py::init<>())
-    .def("add_point", &RTree::add_point)
-    .def("k_nearest_neighbors", &RTree::k_nearest_neighbors)
-    .def("remove_point", &RTree::remove_point)
-    .def("clear", &RTree::clear)
-    .def("range_query", &RTree::range_query);
+      .def(py::init<>())
+      .def("add_point", &RTree::add_point)
+      .def("k_nearest_neighbors", &RTree::k_nearest_neighbors)
+      .def("remove_point", &RTree::remove_point)
+      .def("clear", &RTree::clear)
+      .def("range_query", &RTree::range_query);
 }
